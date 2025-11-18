@@ -12,6 +12,7 @@ const getWRColor = (wr: number) => {
 export default function TablaScreen() {
   return (
     <View style={styles.container}>
+      <Text style={styles.header}>SEASON 15 STATS</Text>
 
       <View style={styles.tableHeader}>
         <Text style={[styles.colChampion, styles.headerText]}>Champion</Text>
