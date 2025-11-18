@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
-import { champions } from "../data/champions";
+import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { champions } from "../../data/champions";
 
 // Función helper fuera del StyleSheet
-const getWRColor = (wr: number) => {
+const getWRColor = wr => {
   if (wr >= 60) return "#a4ff79";
   if (wr >= 50) return "#58cfff";
   return "#ff7878";
@@ -15,8 +15,8 @@ export default function TablaScreen() {
       <Text style={styles.header}>SEASON 15 STATS</Text>
 
       <View style={styles.tableHeader}>
-        <Text style={[styles.colChampion, styles.headerText]}>Champion</Text>
-        <Text style={[styles.colGames, styles.headerText]}>Games</Text>
+        <Text style={[styles.colChampion, styles.headerText]}>Campeón</Text>
+        <Text style={[styles.colGames, styles.headerText]}>Partidas</Text>
         <Text style={[styles.colWR, styles.headerText]}>WR</Text>
         <Text style={[styles.colKDA, styles.headerText]}>KDA</Text>
       </View>
