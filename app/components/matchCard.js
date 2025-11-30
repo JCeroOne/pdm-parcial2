@@ -43,9 +43,9 @@ export default function MatchCard({ match }) {
 
                 <View style={styles.colRight}>
                     <View style={styles.itemsGrid}>
-                        {match.item_slots.map(itemId => (
+                        {match.item_slots.map((itemId, index) => (
                             <Image
-                                key={itemId}
+                                key={`${itemId}-${index}`}
                                 source={{ uri: `https://ddragon.leagueoflegends.com/cdn/15.22.1/img/item/${itemId}.png` }}
                                 style={styles.itemIcon}
                             />
@@ -102,10 +102,10 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     win: {
-        backgroundColor: '#4e9367ff',
+        backgroundColor: '#31568fff',
     },
     loss: {
-        backgroundColor: '#9c3d3dff',
+        backgroundColor: '#9c3d3dd6',
     },
     icon: {
         width: 50,
