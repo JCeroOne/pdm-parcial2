@@ -102,10 +102,10 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     win: {
-        backgroundColor: '#4e9367ff',
+        backgroundColor: '#31568fff',
     },
     loss: {
-        backgroundColor: '#9c3d3dff',
+        backgroundColor: '#9c3d3dd6',
     },
     icon: {
         width: 50,
