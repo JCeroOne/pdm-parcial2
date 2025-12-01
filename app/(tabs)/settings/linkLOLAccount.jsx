@@ -32,6 +32,7 @@ export default function LinkLOLAccScreen(){
         setProcessing(true);
         try {
             const res = await api.post("/players/link", {game_name: player, tag, platform: region});
+            await api.post("/matches/sync", {game_name: player, tag, platform: region});
             alert("Cuenta vinculada con éxito");
             setProcessing(false);
             router.navigate("/(tabs)/usuario");

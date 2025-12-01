@@ -55,14 +55,14 @@ export default function TabOneScreen() {
 				<Text style={styles.label}>Contraseña</Text>
 				<TextInput style={styles.input} placeholder="Contraseña1" secureTextEntry={true} 
 					onChangeText={value => setPassword(value)} />
-				<TouchableOpacity style={styles.loginBtn}>
+				<TouchableOpacity style={styles.btn}>
 					{processing ?
 						<ActivityIndicator size="small" /> :
-						<Text style={styles.loginBtnTxt} onPress={() => login(username, password)}>Iniciar sesión</Text>
+						<Text style={styles.btnTxt} onPress={() => login(username, password)}>Iniciar sesión</Text>
 					}
 				</TouchableOpacity>
 				<Text style={[styles.note, {marginTop: 15}]}>¿No tienes cuenta?</Text>
-				<TouchableOpacity style={styles.btn}>
+				<TouchableOpacity style={[styles.btn, styles.btnGray]}>
 					<Text style={styles.btnTxt} onPress={() => router.navigate("/register")}>Registrarse</Text>
 				</TouchableOpacity>
 			</View>
@@ -99,7 +99,14 @@ const styles = StyleSheet.create({
 		width: "100%"
 	},
 	btn: {
-		backgroundColor: "#0a0",
+		display: "block",
+		backgroundColor: "#00f",
+		padding: 10,
+		borderRadius: 10,
+		marginTop: 10
+	},
+	btnGray: {
+		backgroundColor: "#333",
 		padding: 10,
 		borderRadius: 10,
 		marginVertical: 10
@@ -116,19 +123,6 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		marginTop: 10,
 		marginBottom: 3
-	},
-	loginBtn: {
-		display: "block",
-		backgroundColor: "#00f",
-		padding: 10,
-		borderRadius: 10,
-		marginTop: 10
-	},
-	loginBtnTxt: {
-		color: "#fff",
-		fontWeight: "bold",
-		fontSize: 18,
-		textAlign: "center"
 	},
 	error: {
 		position: "absolute",

@@ -33,9 +33,11 @@ export default function TabOneScreen() {
 			setProcessing(true);
 			try {
 				const res = await api.post("/user/create", {username, password});
+				console.log(res.data);
 				setAuthToken(res.data.access_token);
 				setProcessing(false);
-				router.navigate("/(tabs)/partidas");
+				alert("Usuario creado exitosamente");
+				router.navigate("/");
 			} catch(e){
 				if(e.response){
 					const status = e.response.status;
