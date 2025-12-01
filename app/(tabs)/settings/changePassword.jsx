@@ -38,6 +38,7 @@ export default function ChangePwdScreen(){
         try {
             const res = await api.put("/user/edit/pwd", {password: pwd, new_password: newPwd});
             alert("Contraseña actualizada");
+            setProcessing(false);
             router.navigate("/(tabs)/usuario");
         } catch(e){
             if(e.response){
@@ -49,7 +50,6 @@ export default function ChangePwdScreen(){
             } else {
                 setError("Ocurrió un error interno. Intenta de nuevo más tarde.");
 				setTimeout(() => setError(""), 5000);
-				console.error(e);
             }
             setProcessing(false);
         }

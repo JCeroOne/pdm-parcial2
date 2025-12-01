@@ -34,6 +34,7 @@ export default function TabOneScreen() {
 			try {
 				const res = await api.post("/user/create", {username, password});
 				setAuthToken(res.data.access_token);
+				setProcessing(false);
 				router.navigate("/(tabs)/partidas");
 			} catch(e){
 				if(e.response){
