@@ -67,6 +67,13 @@ export default function TabLayout() {
           tabBarIcon: ({color}) => <TabBarIcon name="gear" color={color} />
         }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          href: null,
+          headerShown: false
+        }}
+      />
     </Tabs>
   );
 }

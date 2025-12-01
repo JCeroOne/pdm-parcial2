@@ -1,36 +1,85 @@
-import { StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+
+import { ActivityIndicator, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
 
 import { useRouter } from 'expo-router';
 
+import { api, setAuthToken } from "../app/utils/api.js";
+
 export default function TabOneScreen() {
 
 		const router = useRouter();
 
-		return (
-            <View style={styles.container}>
-                <Text style={styles.label}>Nombre de usuario</Text>
-                <TextInput style={styles.input} placeholder="Usuario1" />
-                <Text style={styles.label}>Contraseña</Text>
-                <TextInput style={styles.input} placeholder="Contraseña1" secureTextEntry={true} />
-                <Text style={styles.label}>Confirmar contraseña</Text>
-                <TextInput style={styles.input} placeholder="Contraseña1" secureTextEntry={true} />
-                <TouchableOpacity style={styles.loginBtn}>
-                    <Text style={styles.loginBtnTxt} onPress={() => {
-                        alert("Esta función aún no está implementada.");
-                        router.navigate("/");
-                    }}>Registrarse</Text>
-                </TouchableOpacity>
-            </View>
-		);
+		const [username, setUsername] = useState("");
+		const [password, setPassword] = useState("");
+		const [confirmPwd, setConfirmPwd] = useState("");
+		const [error, setError] = useState("");
+		const [processing, setProcessing] = useState(false);
+
+		async function register(){
+			if(username.trim() == "" || password.trim() == "" || confirmPwd.trim() == ""){
+				setError("No se proporcionaron todos los datos necesarios.");
+				setTimeout(() => setError(""), 5000);
+				return;
+			}
+			if(password != confirmPwd){
+				setError("Las contraseñas no coinciden.");
+				setTimeout(() => setError(""), 5000);
+				return;
+			}
+
+			setProcessing(true);
+			try {
+				const res = await api.post("/user/create", {username, password});
+				setAuthToken(res.data.access_token);
+				router.navigate("/(tabs)/partidas");
+			} catch(e){
+				if(e.response){
+					const status = e.response.status;
+					if(status == 409) setError("El nombre de usuario está ocupado.");
+					else if(status == 400) setError("Los datos proporcionados no son válidos.");
+					else setError("Ocurrió un error interno. Intenta de nuevo más tarde.");
+					setTimeout(() => setError(""), 5000);
+				} else {
+					setError("Ocurrió un error interno. Intenta de nuevo más tarde.");
+					setTimeout(() => setError(""), 5000);
+					console.error(e);
+				}
+				setProcessing(false);
+			}
+		}
+
+		return (<>
+			<View style={styles.container}>
+				{error.trim() == "" ? "" : <View style={styles.error}>
+					<Text style={styles.errorTxt}>{error}</Text>
+				</View>}
+				<Text style={styles.label}>Nombre de usuario</Text>
+				<TextInput style={styles.input} placeholder="Usuario1"
+					onChangeText={value => setUsername(value)} />
+				<Text style={styles.label}>Contraseña</Text>
+				<TextInput style={styles.input} placeholder="Contraseña1" secureTextEntry={true}
+					onChangeText={value => setPassword(value)} />
+				<Text style={styles.label}>Confirmar contraseña</Text>
+				<TextInput style={styles.input} placeholder="Contraseña1" secureTextEntry={true}
+					onChangeText={value => setConfirmPwd(value)} />
+				<TouchableOpacity style={styles.loginBtn}>
+					{processing ? 
+						<ActivityIndicator size="small" /> :
+						<Text style={styles.loginBtnTxt} onPress={() => register()}>Registrarse</Text>
+					}
+				</TouchableOpacity>
+			</View>
+		</>);
 }
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		padding: 30,
-        paddingVertical: 10
+        paddingVertical: 30
 	},
 	heading: {
 		fontSize: 32,
@@ -83,5 +132,18 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		fontSize: 18,
 		textAlign: "center"
+	},
+	error: {
+		backgroundColor: "rgba(255, 0, 0, 0.33)",
+		padding: 10,
+		paddingHorizontal: 20,
+		boxSizing: "border-box",
+		borderRadius: 10,
+		transitionDuration: 0.25
+	},
+	errorTxt: {
+		fontSize: 16,
+		textAlign: "justify",
+		fontWeight: "bold"
 	}
 });

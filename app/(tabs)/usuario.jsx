@@ -21,7 +21,7 @@ export default function Usuario() {
 	return(<>
 		<View style={styles.container}>
 			<Text style={styles.sectionHeader}>Cuenta</Text>
-			<TouchableOpacity style={styles.btn} onPress={() => setShowPwdChange(true)}>
+			<TouchableOpacity style={styles.btn} onPress={() => router.push("/settings/changePassword")}>
 				<Text style={styles.btnTxt}>Cambiar contraseña <Icon name="angle-right" size="18" /></Text>
 			</TouchableOpacity>
 			<TouchableOpacity style={[styles.btn, styles.btnRed]} onPress={() => router.navigate("/")}>
