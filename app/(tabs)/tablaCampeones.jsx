@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { api } from "../utils/api";
 import { getChampionIcon } from "../utils/dataDragon";
 
@@ -147,20 +147,19 @@ export default function TablaCampeones() {
     fetchChampionStats();
   }, []);
 
-  // 🔄 BOTÓN: Recargar stats
   const handleSync = async () => {
     if (isSyncDisabled) return;
 
     setIsSyncDisabled(true);
-    setSyncLabel("Syncing…");
+    setSyncLabel("Actualizando...");
     setIsUpToDate(false);
 
     try {
       await fetchChampionStats();
-      setSyncLabel("Up to date");
+      setSyncLabel("Actualizado");
       setIsUpToDate(true);
     } catch {
-      setSyncLabel("Retry");
+      setSyncLabel("Reintentar");
       setIsUpToDate(false);
     }
 
@@ -181,7 +180,6 @@ export default function TablaCampeones() {
       {infoMsg && <Text style={styles.infoText}>{infoMsg}</Text>}
       {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
 
-      {/* 🔥 FILA HEADER + BOTÓN */}
       <View style={styles.headerRow}>
         <Text style={styles.headerLeft}>SEASON 15 STATS</Text>
 
@@ -204,7 +202,6 @@ export default function TablaCampeones() {
         <ScrollView horizontal showsHorizontalScrollIndicator={true}>
           <View>
 
-            {/* HEADER */}
             <View style={[styles.row, styles.tableHeader]}>
               <Text style={[styles.colChampion, styles.headerText]}>Champion</Text>
               <Text style={[styles.colGames, styles.headerText]}>Games</Text>
@@ -214,7 +211,6 @@ export default function TablaCampeones() {
               <Text style={[styles.colCS, styles.headerText]}>CS/m</Text>
             </View>
 
-            {/* TOTAL ROW */}
             {totals && (
               <View style={[styles.row, styles.totalRow]}>
                 <View style={styles.championInfo}>
@@ -240,7 +236,6 @@ export default function TablaCampeones() {
               </View>
             )}
 
-            {/* ROWS */}
             <FlatList
               data={champions}
               keyExtractor={(item) => item.id.toString()}
@@ -315,7 +310,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  /* 🔥 NUEVO: Header + botón */
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -329,7 +323,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  /* 🔥 Estilo del botón que pediste */
   syncButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -359,7 +352,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1c40f",
   },
 
-  /* TABLA */
   tableHeader: {
     borderBottomWidth: 2,
     borderBottomColor: "#1a1f3a",

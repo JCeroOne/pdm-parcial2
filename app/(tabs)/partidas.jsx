@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react"
-import { ActivityIndicator, Image, SectionList, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import MatchCard from "../components/matchCard"
-import { api } from "../utils/api"
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Image, SectionList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import MatchCard from "../components/matchCard";
+import { api } from "../utils/api";
+
+import { useRouter } from "expo-router";
 
 const PAGE_SIZE = 20
 const MAX_MATCHES = 100
@@ -58,6 +60,9 @@ function groupMatchesByDay(matches) {
 }
 
 export default function PartidasScreen() {
+
+  const router = useRouter();
+
   const [sections, setSections] = useState([])
   const [flatMatches, setFlatMatches] = useState([])
   const [loading, setLoading] = useState(true)
