@@ -148,7 +148,7 @@ export default function TablaCampeones() {
         <ActivityIndicator size="large" color="#58cfff" />
         <Text style={styles.infoText}>Cargando estadísticas...</Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -240,7 +240,7 @@ export default function TablaCampeones() {
         </ScrollView>
       </ScrollView>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -260,14 +260,14 @@ const styles = StyleSheet.create({
   },
 
   infoText: {
-    color: "#58cfff",
+    color: "#fff",
     fontSize: 16,
     textAlign: "center",
     marginTop: 20,
   },
 
   errorText: {
-    color: "#ff7878",
+    color: "#ff6b6b",
     fontSize: 16,
     textAlign: "center",
     marginTop: 20,

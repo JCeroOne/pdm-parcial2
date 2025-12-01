@@ -1,6 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useRouter } from "expo-router";
 
@@ -12,73 +11,21 @@ export default function Usuario() {
 
 	const router = useRouter();
 
-	const [showPwdChange, setShowPwdChange] = useState(false);
-
-	const [playerName, setPlayerName] = useState("");
-	const [playerTag, setPlayerTag] = useState("");
-	const [playerRegion, setPlayerRegion] = useState("");
-
 	return(<>
 		<View style={styles.container}>
-			<Text style={styles.sectionHeader}>Cuenta</Text>
-			<TouchableOpacity style={styles.btn} onPress={() => setShowPwdChange(true)}>
-				<Text style={styles.btnTxt}>Cambiar contraseña <Icon name="angle-right" size="18" /></Text>
-			</TouchableOpacity>
-			<TouchableOpacity style={[styles.btn, styles.btnRed]} onPress={() => router.navigate("/")}>
+			<TouchableOpacity style={[styles.btn]} onPress={() => router.navigate("/")}>
 				<Text style={styles.btnTxt}>Cerrar sesión <Icon name="angle-right" size="18" /></Text>
 			</TouchableOpacity>
-			<Text style={styles.sectionHeader}>Datos de jugador</Text>
-			<Text style={styles.label}>Nombre</Text>
-			<TextInput 
-				style={styles.input}
-				placeholder="testuser01"
-			/>
-			<Text style={styles.label}>Tag</Text>
-			<TextInput 
-				style={styles.input}
-				placeholder="#LAN"
-			/>
-			<Text style={styles.label}>Región</Text>
-			<TextInput 
-				style={styles.input}
-				placeholder="LAN"
-			/>
-			<TouchableOpacity style={styles.saveBtn} onPress={() => alert("Esta función aún no está implementada.")}>
-				<Text style={styles.saveBtnTxt}>Guardar</Text>
+			<TouchableOpacity style={[styles.btn]} onPress={() => router.push("/settings/linkLOLAccount")}>
+				<Text style={styles.btnTxt}>Vincular cuenta de LoL <Icon name="angle-right" size="18" /></Text>
+			</TouchableOpacity>
+			<TouchableOpacity style={[styles.btn]} onPress={() => router.push("/settings/changePassword")}>
+				<Text style={styles.btnTxt}>Cambiar contraseña <Icon name="angle-right" size="18" /></Text>
+			</TouchableOpacity>
+			<TouchableOpacity style={[styles.btn, styles.btnRed]} onPress={() => router.push("/settings/deleteAccount")}>
+				<Text style={styles.btnTxt}>Eliminar cuenta <Icon name="angle-right" size="18" /></Text>
 			</TouchableOpacity>
 		</View>
-		{!showPwdChange ? "" : (
-			<>
-				<View style={styles.pwdChangeBg}></View>
-				<View style={styles.pwdChange}>
-					<Text style={styles.sectionHeader}>Cambiar contraseña</Text>
-					<Text style={styles.label}>Contraseña actual</Text>
-					<TextInput 
-						style={styles.input}
-						secureTextEntry={true}
-					/>
-					<Text style={styles.label}>Contraseña nueva</Text>
-					<TextInput 
-						style={styles.input}
-						secureTextEntry={true}
-					/>
-					<Text style={styles.label}>Confirmar contraseña nueva</Text>
-					<TextInput 
-						style={styles.input}
-						secureTextEntry={true}
-					/>
-					<TouchableOpacity style={styles.btn} onPress={() => {
-						alert("Esta función aún no está implementada.");
-						setShowPwdChange(false);
-					}}>
-						<Text style={styles.btnTxt}><Icon name="check" size="18" /> Confirmar</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={[styles.btn, styles.btnRed]} onPress={() => setShowPwdChange(false)}>
-						<Text style={styles.btnTxt}>Cancelar</Text>
-					</TouchableOpacity>
-				</View>
-			</>
-		)}
 	</>);
 }
 
@@ -112,10 +59,13 @@ const styles = StyleSheet.create({
 	marginBottom: 10
   },
   btn: {
-	backgroundColor: "#0a0",
+	backgroundColor: "#00c",
 	padding: 10,
 	borderRadius: 10,
 	marginVertical: 10
+  },
+  btnGray: {
+	backgroundColor: "#333"
   },
   btnRed: {
 	backgroundColor: "#a00"
@@ -124,18 +74,6 @@ const styles = StyleSheet.create({
 	color: "#fff",
 	fontSize: 18,
 	fontWeight: "bold",
-	textAlign: "center"
-  },
-  saveBtn: {
-	display: "block",
-	backgroundColor: "#00c",
-	padding: 10,
-	borderRadius: 10
-  },
-  saveBtnTxt: {
-	color: "#fff",
-	fontWeight: "bold",
-	fontSize: 18,
 	textAlign: "center"
   },
   pwdChangeBg: {

@@ -1,6 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -12,6 +13,14 @@ function TabBarIcon(props: {
   color: string;
 }) {
   return <FontAwesome size={25} style={{ marginBottom: -3 }} {...props} />;
+}
+
+function Icon(props: {
+  name: React.ComponentProps<typeof FontAwesome>['name'];
+  color: string;
+  size: number;
+}) {
+  return <FontAwesome style={{ marginBottom: -3}} {...props} />;
 }
 
 export default function TabLayout() {
@@ -50,7 +59,12 @@ export default function TabLayout() {
         name="partidas"
         options={{
           title: "Partidas",
-          tabBarIcon: ({color}) => <TabBarIcon name="gamepad" color={color} />
+          tabBarIcon: ({color}) => <TabBarIcon name="gamepad" color={color} />,
+          headerRight: () => (
+            <TouchableOpacity style={styles.refreshBtn}>
+              <Text style={styles.refreshBtnTxt}><Icon name="refresh" color="#fff" size={20}></Icon></Text>
+            </TouchableOpacity>
+          )
         }}
       />
       <Tabs.Screen
@@ -67,6 +81,23 @@ export default function TabLayout() {
           tabBarIcon: ({color}) => <TabBarIcon name="gear" color={color} />
         }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          href: null,
+          headerShown: false
+        }}
+      />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  refreshBtn: {
+    position: "absolute",
+    right: 20
+  },
+  refreshBtnTxt: {
+    fontSize: 24
+  }
+});
