@@ -158,58 +158,63 @@ export default function PartidasScreen() {
     if (syncStatus === "loading" || syncStatus === "cooldown") return
 
     try {
-      setSyncStatus("loading")
-      setInfoMsg(null)
-      setMatchesErrorMsg(null)
-      await api.post("/matches/sync", { count: 100 })
-      setOffset(0)
-      setHasMore(true)
-      await fetchMatches(0, false)
-      setSyncStatus("cooldown")
+      setSyncStatus("loading");
+      setInfoMsg(null);
+      setMatchesErrorMsg(null);
+      await api.post("/matches/sync", { count: 100 });
+      setOffset(0);
+      setHasMore(true);
+      await fetchPlayer();
+      await fetchMatches(0, false);
+      setSyncStatus("cooldown");
       setTimeout(() => {
-        setSyncStatus("idle")
-      }, SYNC_COOLDOWN_MS)
+        setSyncStatus("idle");
+      }, SYNC_COOLDOWN_MS);
     } catch (err) {
       if (err.response) {
-        setMatchesErrorMsg("Error al sincronizar tus partidas. Intenta de nuevo.")
+        setMatchesErrorMsg("Error al sincronizar tus partidas. Intenta de nuevo.");
       } else {
-        setMatchesErrorMsg("Error de conexión al sincronizar tus partidas.")
+        setMatchesErrorMsg("Error de conexión al sincronizar tus partidas.");
       }
-      setSyncStatus("idle")
+      setSyncStatus("idle");
+    }
+  }
+
+  const fetchPlayer = async () => {
+    try {
+      const res = await api.get("/players/me")
+      setPlayer(res.data.data)
+    } catch (err) {
+      if (err.response) {
+        const status = err.response.status
+        const msgLower = (err.response.data?.msg || "").toLowerCase()
+
+        if (status === 404) {
+          if (msgLower.includes("no tiene cuenta de lol vinculada")) {
+            setInfoMsg("Aún no tienes una cuenta de LoL vinculada.")
+          } else if (msgLower.includes("datos del jugador no encontrados")) {
+            setInfoMsg(
+              "Tu cuenta está vinculada pero faltan datos del jugador. Sincroniza partidas."
+            )
+          } else if (msgLower.includes("usuario no encontrado")) {
+            setErrorMsg("Tu sesión no es válida. Vuelve a iniciar sesión.")
+          }
+        } else if (status === 401) {
+          setInfoMsg("Inicia sesión para ver tu perfil y partidas.")
+        } else {
+          setErrorMsg("Error al cargar tu perfil. Intenta de nuevo.")
+        }
+      } else {
+        setErrorMsg("Error de conexión con el servidor.")
+      }
     }
   }
 
   useEffect(() => {
-    const fetchPlayer = async () => {
-      try {
-        const res = await api.get("/players/me")
-        setPlayer(res.data.data)
-      } catch (err) {
-        if (err.response) {
-          const status = err.response.status
-          const msgLower = (err.response.data?.msg || "").toLowerCase()
-
-          if (status === 404) {
-            if (msgLower.includes("no tiene cuenta de lol vinculada")) {
-              setInfoMsg("Aún no tienes una cuenta de LoL vinculada.")
-            } else if (msgLower.includes("datos del jugador no encontrados")) {
-              setInfoMsg(
-                "Tu cuenta está vinculada pero faltan datos del jugador. Sincroniza partidas."
-              )
-            } else if (msgLower.includes("usuario no encontrado")) {
-              setErrorMsg("Tu sesión no es válida. Vuelve a iniciar sesión.")
-            }
-          } else if (status === 401) {
-            setInfoMsg("Inicia sesión para ver tu perfil y partidas.")
-          } else {
-            setErrorMsg("Error al cargar tu perfil. Intenta de nuevo.")
-          }
-        } else {
-          setErrorMsg("Error de conexión con el servidor.")
-        }
-      }
+    if (!api.defaults.headers.common["Authorization"]){
+      router.navigate("/");
+      return;
     }
-
     fetchPlayer()
     fetchMatches(0, false)
   }, [])

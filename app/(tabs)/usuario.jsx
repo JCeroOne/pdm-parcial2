@@ -2,6 +2,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useRouter } from "expo-router";
+import { setAuthToken } from '../utils/api';
 
 function Icon(props) {
   return <FontAwesome style={{ marginBottom: -3 }} {...props} />;
@@ -11,9 +12,14 @@ export default function Usuario() {
 
 	const router = useRouter();
 
+	function logout(){
+		setAuthToken();
+		router.navigate("/");
+	}
+
 	return(<>
 		<View style={styles.container}>
-			<TouchableOpacity style={[styles.btn]} onPress={() => router.navigate("/")}>
+			<TouchableOpacity style={[styles.btn]} onPress={() => logout()}>
 				<Text style={styles.btnTxt}>Cerrar sesión <Icon name="angle-right" size="18" /></Text>
 			</TouchableOpacity>
 			<TouchableOpacity style={[styles.btn]} onPress={() => router.push("/settings/linkLOLAccount")}>
