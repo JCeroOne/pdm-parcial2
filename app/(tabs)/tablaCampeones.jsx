@@ -3,6 +3,10 @@ import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, Touch
 import { api } from "../utils/api";
 import { getChampionIcon } from "../utils/dataDragon";
 
+import { useFocusEffect } from "expo-router";
+
+import GlobalContext from "../GlobalContext.js";
+
 function getWRColor(wr) {
   if (wr >= 60) return "#a4ff79";
   if (wr >= 50) return "#58cfff";
@@ -28,6 +32,39 @@ export default function TablaCampeones() {
   const [syncLabel, setSyncLabel] = useState("Actualizar");
 
   const fetchChampionStats = async () => {
+
+    let load = true;
+
+    try {
+      await api.get("/players/me")
+    } catch (err) {
+      load = false;
+      if (err.response) {
+        const status = err.response.status
+        const msgLower = (err.response.data?.msg || "").toLowerCase()
+
+        if (status === 404) {
+          if (msgLower.includes("no tiene cuenta de lol vinculada")) {
+            setInfoMsg("Aún no tienes una cuenta de LoL vinculada.")
+          } else if (msgLower.includes("datos del jugador no encontrados")) {
+            setInfoMsg(
+              "Tu cuenta está vinculada, pero no se encontraron los datos. Vuelve a iniciar sesión."
+            )
+          } else if (msgLower.includes("usuario no encontrado")) {
+            setErrorMsg("Tu sesión no es válida. Vuelve a iniciar sesión.")
+          }
+        } else if (status === 401) {
+          setInfoMsg("Inicia sesión para ver tus estadísticas.")
+        } else {
+          setErrorMsg("Error al cargar tu perfil. Intenta de nuevo.")
+        }
+      } else {
+        setErrorMsg("Error de conexión con el servidor.")
+      }
+    }
+
+    if(!load) return;
+
     try {
       setLoading(true);
       setInfoMsg(null);
@@ -142,6 +179,13 @@ export default function TablaCampeones() {
       setLoading(false);
     }
   };
+
+  useFocusEffect(() => {
+    if(GlobalContext.needs_update.campeones){
+      fetchChampionStats();
+      GlobalContext.needs_update.campeones = false;
+    }
+  });
 
   useEffect(() => {
     fetchChampionStats();

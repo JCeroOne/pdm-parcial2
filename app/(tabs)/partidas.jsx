@@ -3,7 +3,9 @@ import { ActivityIndicator, Image, SectionList, StyleSheet, Text, TouchableOpaci
 import MatchCard from "../components/matchCard";
 import { api } from "../utils/api";
 
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import GlobalContext from "../GlobalContext";
+
 
 const PAGE_SIZE = 20
 const MAX_MATCHES = 100
@@ -214,6 +216,14 @@ export default function PartidasScreen() {
       }
     }
   }
+
+  useFocusEffect(() => {
+    if(GlobalContext.needs_update.partidas){
+      GlobalContext.needs_update.partidas = false;
+      fetchPlayer()
+      fetchMatches(0, false)
+    }
+  });
 
   useEffect(() => {
     if (!api.defaults.headers.common["Authorization"]){

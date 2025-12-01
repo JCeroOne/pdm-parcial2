@@ -5,6 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View 
 import { useRouter } from "expo-router";
 import { useState } from "react";
 
+import GlobalContext from '../../GlobalContext.js';
 import { api } from '../../utils/api.js';
 
 function Icon(props) {
@@ -34,6 +35,8 @@ export default function LinkLOLAccScreen(){
             const res = await api.post("/players/link", {game_name: player, tag, platform: region});
             await api.post("/matches/sync", {game_name: player, tag, platform: region});
             alert("Cuenta vinculada con éxito");
+            GlobalContext.needs_update.partidas = true;
+            GlobalContext.needs_update.campeones = true;
             setProcessing(false);
             router.navigate("/(tabs)/usuario");
         } catch(e){

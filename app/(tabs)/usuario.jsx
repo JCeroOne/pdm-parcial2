@@ -8,6 +8,7 @@ function Icon(props) {
   return <FontAwesome style={{ marginBottom: -3 }} {...props} />;
 }
 
+
 export default function Usuario() {
 
 	const router = useRouter();
