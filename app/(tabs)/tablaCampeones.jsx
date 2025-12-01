@@ -1,109 +1,152 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api } from "../utils/api";
 import { getChampionIcon } from "../utils/dataDragon";
 
-const getWRColor = wr => {
+function getWRColor(wr) {
   if (wr >= 60) return "#a4ff79";
   if (wr >= 50) return "#58cfff";
   return "#ff7878";
-};
+}
 
-export default function TablaScreen() {
+function getKDAColor(kda) {
+  if (kda >= 3) return "#a4ff79";
+  if (kda >= 2) return "#58cfff";
+  return "#ff7878";
+}
+
+export default function TablaCampeones() {
   const [champions, setChampions] = useState([]);
+  const [totals, setTotals] = useState(null);
   const [loading, setLoading] = useState(true);
   const [infoMsg, setInfoMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
+    const fetchChampionStats = async () => {
+      try {
+        setLoading(true);
+        setInfoMsg(null);
+        setErrorMsg(null);
+
+        const res = await api.get("/matches/history", {
+          params: { limit: 100, offset: 0 }
+        });
+
+        const backendMatches = res.data?.data || [];
+
+        if (backendMatches.length === 0) {
+          setInfoMsg("No tienes partidas registradas aún.");
+          setChampions([]);
+          return;
+        }
+
+        const statsMap = {};
+        let totalGames = 0;
+        let totalWins = 0;
+        let totalKills = 0;
+        let totalDeaths = 0;
+        let totalAssists = 0;
+        let totalCS = 0;
+        let totalDuration = 0;
+
+        for (const entry of backendMatches) {
+          const p = entry.performance;
+          const m = entry.match;
+          const champId = p.champion_id;
+
+          totalGames += 1;
+          if (p.win) totalWins += 1;
+          totalKills += p.kills;
+          totalDeaths += p.deaths;
+          totalAssists += p.assists;
+          totalCS += p.cs;
+          totalDuration += m.duration_seconds;
+
+          if (!statsMap[champId]) {
+            statsMap[champId] = {
+              champion_id: champId,
+              games: 0,
+              wins: 0,
+              losses: 0,
+              kills: 0,
+              deaths: 0,
+              assists: 0,
+              cs: 0,
+              duration: 0,
+            };
+          }
+
+          const stat = statsMap[champId];
+          stat.games += 1;
+          if (p.win) stat.wins += 1;
+          else stat.losses += 1;
+
+          stat.kills += p.kills;
+          stat.deaths += p.deaths;
+          stat.assists += p.assists;
+          stat.cs += p.cs;
+          stat.duration += m.duration_seconds;
+        }
+
+        const totalKDA = totalDeaths > 0 ? ((totalKills + totalAssists) / totalDeaths) : (totalKills + totalAssists);
+        const avgCSPerMin = totalDuration > 0 ? (totalCS / (totalDuration / 60)) : 0;
+
+        const calculatedTotals = {
+          games: totalGames,
+          winrate: Math.round((totalWins / totalGames) * 100),
+          wins: totalWins,
+          losses: totalGames - totalWins,
+          kda: totalKDA.toFixed(1),
+          kills: (totalKills / totalGames).toFixed(1),
+          deaths: (totalDeaths / totalGames).toFixed(1),
+          assists: (totalAssists / totalGames).toFixed(1),
+          csPerMin: avgCSPerMin.toFixed(1),
+        };
+
+        const championArray = await Promise.all(
+          Object.values(statsMap).map(async (stat) => {
+            const iconUrl = await getChampionIcon(stat.champion_id);
+            const kda = stat.deaths > 0 ? ((stat.kills + stat.assists) / stat.deaths) : (stat.kills + stat.assists);
+            const csPerMin = stat.duration > 0 ? (stat.cs / (stat.duration / 60)) : 0;
+
+            return {
+              id: stat.champion_id,
+              name: iconUrl ? iconUrl.split('/').pop().replace('.png', '') : 'Unknown',
+              icon: iconUrl,
+              games: stat.games,
+              winrate: Math.round((stat.wins / stat.games) * 100),
+              wins: stat.wins,
+              losses: stat.losses,
+              kda: kda.toFixed(1),
+              kills: (stat.kills / stat.games).toFixed(1),
+              deaths: (stat.deaths / stat.games).toFixed(1),
+              assists: (stat.assists / stat.games).toFixed(1),
+              csPerMin: csPerMin.toFixed(1),
+            };
+          })
+        );
+
+        championArray.sort((a, b) => b.games - a.games);
+
+        setTotals(calculatedTotals);
+        setChampions(championArray);
+
+      } catch (err) {
+        setErrorMsg("Error al cargar las estadísticas.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchChampionStats();
   }, []);
-
-  const fetchChampionStats = async () => {
-    try {
-      setLoading(true);
-      setInfoMsg(null);
-      setErrorMsg(null);
-
-      const res = await api.get("/matches/history", {
-        params: { limit: 100, offset: 0 }
-      });
-
-      const backendMatches = res.data?.data || [];
-
-      if (backendMatches.length === 0) {
-        setInfoMsg("No tienes partidas registradas aún.");
-        setChampions([]);
-        return;
-      }
-
-      // Procesar estadísticas por campeón
-      const statsMap = {};
-
-      for (const entry of backendMatches) {
-        const p = entry.performance;
-        const champId = p.champion_id;
-
-        if (!statsMap[champId]) {
-          statsMap[champId] = {
-            champion_id: champId,
-            games: 0,
-            wins: 0,
-            total_kda: 0,
-          };
-        }
-
-        statsMap[champId].games += 1;
-        if (p.win) statsMap[champId].wins += 1;
-        statsMap[champId].total_kda += p.kda;
-      }
-
-      // Convertir a array y obtener iconos
-      const championArray = await Promise.all(
-        Object.values(statsMap).map(async (stat) => {
-          const iconUrl = await getChampionIcon(stat.champion_id);
-          
-          return {
-            id: stat.champion_id,
-            name: iconUrl ? iconUrl.split('/').pop().replace('.png', '') : 'Unknown',
-            icon: iconUrl,
-            games: stat.games,
-            winrate: Math.round((stat.wins / stat.games) * 100),
-            kda: (stat.total_kda / stat.games).toFixed(1),
-          };
-        })
-      );
-
-      // Ordenar por cantidad de partidas
-      championArray.sort((a, b) => b.games - a.games);
-
-      setChampions(championArray);
-
-    } catch (err) {
-      if (err.response) {
-        const status = err.response.status;
-        const msg = err.response.data?.msg;
-
-        if (status === 404 && msg && msg.includes("no tiene cuenta de Lol vinculada")) {
-          setInfoMsg("Aún no tienes una cuenta de LoL vinculada.");
-        } else if (status === 401) {
-          setInfoMsg("Inicia sesión para ver tus estadísticas.");
-        } else {
-          setErrorMsg("Error al cargar las estadísticas. Intenta de nuevo.");
-        }
-      } else {
-        setErrorMsg("Error de conexión con el servidor.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#58cfff" />
-        <Text style={styles.loadingText}>Cargando estadísticas...</Text>
+        <Text style={styles.infoText}>Cargando estadísticas...</Text>
       </View>
     );
   }
@@ -113,52 +156,95 @@ export default function TablaScreen() {
       {infoMsg && <Text style={styles.infoText}>{infoMsg}</Text>}
       {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
 
-      {champions.length === 0 && !infoMsg && !errorMsg && (
-        <Text style={styles.infoText}>No se encontraron estadísticas.</Text>
-      )}
+      <ScrollView style={{ flex: 1 }}>
+        <Text style={styles.header}>SEASON 15 STATS</Text>
 
-      {champions.length > 0 && (
-        <>
-          <Text style={styles.header}>SEASON 15 STATS</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+          <View>
 
-          <View style={styles.tableHeader}>
-            <Text style={[styles.colChampion, styles.headerText]}>Campeón</Text>
-            <Text style={[styles.colGames, styles.headerText]}>Partidas</Text>
-            <Text style={[styles.colWR, styles.headerText]}>WR</Text>
-            <Text style={[styles.colKDA, styles.headerText]}>KDA</Text>
-          </View>
+            {/* HEADER */}
+            <View style={[styles.row, styles.tableHeader]}>
+              <Text style={[styles.colChampion, styles.headerText]}>Champion</Text>
+              <Text style={[styles.colGames, styles.headerText]}>Games</Text>
+              <Text style={[styles.colWR, styles.headerText]}>WR</Text>
+              <Text style={[styles.colKDA, styles.headerText]}>KDA</Text>
+              <Text style={[styles.colKDA2, styles.headerText]}>K/D/A</Text>
+              <Text style={[styles.colCS, styles.headerText]}>CS/m</Text>
+            </View>
 
-          <FlatList
-            data={champions}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.row}>
+            {/* TOTAL ROW */}
+            {totals && (
+              <View style={[styles.row, styles.totalRow]}>
                 <View style={styles.championInfo}>
-                  {item.icon ? (
-                    <Image source={{ uri: item.icon }} style={styles.icon} />
-                  ) : (
-                    <View style={[styles.icon, { backgroundColor: '#333' }]} />
-                  )}
-                  <Text style={styles.championName}>{item.name}</Text>
+                  <Text style={styles.championName}>All Champions</Text>
                 </View>
 
-                <Text style={[styles.games, styles.text]}>{item.games}</Text>
+                <Text style={[styles.colGames, styles.text]}>{totals.games}</Text>
 
-                <Text style={[styles.wr, styles.text, { color: getWRColor(item.winrate) }]}>
-                  {item.winrate}%
+                <View style={styles.colWR}>
+                  <Text style={[styles.text, { color: getWRColor(totals.winrate), fontWeight: "600" }]}>
+                    {totals.winrate}%
+                  </Text>
+                  <Text style={styles.subText}>{totals.wins}W - {totals.losses}L</Text>
+                </View>
+
+                <Text style={[styles.colKDA, styles.text]}>{totals.kda}</Text>
+
+                <Text style={[styles.colKDA2, styles.text]}>
+                  {totals.kills} / {totals.deaths} / {totals.assists}
                 </Text>
 
-                <Text style={[styles.kda, styles.text]}>{item.kda}</Text>
+                <Text style={[styles.colCS, styles.text]}>{totals.csPerMin}</Text>
               </View>
             )}
-          />
-        </>
-      )}
+
+            {/* ROWS */}
+            <FlatList
+              data={champions}
+              keyExtractor={(item) => item.id.toString()}
+              scrollEnabled={false}
+              renderItem={({ item }) => (
+                <View style={styles.row}>
+                  <View style={styles.championInfo}>
+                    {item.icon ? (
+                      <Image source={{ uri: item.icon }} style={styles.icon} />
+                    ) : (
+                      <View style={[styles.icon, { backgroundColor: '#333' }]} />
+                    )}
+
+                    <Text style={styles.championName}>{item.name}</Text>
+                  </View>
+
+                  <Text style={[styles.colGames, styles.text]}>{item.games}</Text>
+
+                  <View style={styles.colWR}>
+                    <Text style={[styles.text, { color: getWRColor(item.winrate), fontWeight: "600" }]}>
+                      {item.winrate}%
+                    </Text>
+                    <Text style={styles.subText}>{item.wins}W - {item.losses}L</Text>
+                  </View>
+
+                  <Text style={[styles.colKDA, styles.text, { color: getKDAColor(parseFloat(item.kda)) }]}>
+                    {item.kda}
+                  </Text>
+
+                  <Text style={[styles.colKDA2, styles.text]}>
+                    {item.kills} / {item.deaths} / {item.assists}
+                  </Text>
+
+                  <Text style={[styles.colCS, styles.text]}>{item.csPerMin}</Text>
+                </View>
+              )}
+            />
+          </View>
+        </ScrollView>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: "#0b0d12",
@@ -171,12 +257,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#0b0d12",
     justifyContent: "center",
     alignItems: "center",
-  },
-
-  loadingText: {
-    color: "#d1d1d1",
-    fontSize: 16,
-    marginTop: 10,
   },
 
   infoText: {
@@ -202,58 +282,73 @@ const styles = StyleSheet.create({
   },
 
   tableHeader: {
-    flexDirection: "row",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#222",
-    marginBottom: 5,
+    borderBottomWidth: 2,
+    borderBottomColor: "#1a1f3a",
+    backgroundColor: "#12141b",
   },
 
   headerText: {
     color: "#787878",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
   },
-
-  colChampion: { flex: 2 },
-  colGames: { flex: 1, textAlign: "center" },
-  colWR: { flex: 1, textAlign: "center" },
-  colKDA: { flex: 1, textAlign: "center" },
 
   row: {
     backgroundColor: "#12141b",
-    marginVertical: 6,
+    marginVertical: 3,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 8,
     flexDirection: "row",
     alignItems: "center",
+  },
+
+  totalRow: {
+    backgroundColor: "#1a1f3a",
+    borderWidth: 1,
+    borderColor: "#2a3f5a",
+    marginBottom: 10,
   },
 
   championInfo: {
-    flex: 2,
+    width: 180,
     flexDirection: "row",
     alignItems: "center",
+    paddingRight: 10,
   },
 
   icon: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: 8,
     marginRight: 10,
   },
 
   championName: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
+    flex: 1,
   },
 
   text: {
     color: "#d1d1d1",
     textAlign: "center",
+    fontSize: 14,
   },
 
-  games: { flex: 1 },
-  wr: { flex: 1, textAlign: "center" },
-  kda: { flex: 1, textAlign: "center" },
+  subText: {
+    color: "#787878",
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 2,
+  },
+
+  colGames: { width: 70, textAlign: "center" },
+  colWR: { width: 90, alignItems: "center" },
+  colKDA: { width: 70, textAlign: "center" },
+  colKDA2: { width: 110, textAlign: "center" },
+  colCS: { width: 70, textAlign: "center" },
+  colChampion: { width: 180 },
+
 });
