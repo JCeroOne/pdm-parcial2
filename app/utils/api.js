@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const api = axios.create({
     baseURL: "https://backend-lol-proyectomovil.onrender.com",
-    timeout: 10000
+    timeout: 30000
 })
 
 export function setAuthToken(token) {
