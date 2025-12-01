@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { api } from "../utils/api";
 import { getChampionIcon } from "../utils/dataDragon";
 
@@ -22,125 +22,150 @@ export default function TablaCampeones() {
   const [infoMsg, setInfoMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  useEffect(() => {
-    const fetchChampionStats = async () => {
-      try {
-        setLoading(true);
-        setInfoMsg(null);
-        setErrorMsg(null);
+  // 🔄 Estados del botón de sincronización
+  const [isSyncDisabled, setIsSyncDisabled] = useState(false);
+  const [isUpToDate, setIsUpToDate] = useState(true);
+  const [syncLabel, setSyncLabel] = useState("Actualizar");
 
-        const res = await api.get("/matches/history", {
-          params: { limit: 100, offset: 0 }
-        });
+  const fetchChampionStats = async () => {
+    try {
+      setLoading(true);
+      setInfoMsg(null);
+      setErrorMsg(null);
 
-        const backendMatches = res.data?.data || [];
+      const res = await api.get("/matches/history", {
+        params: { limit: 100, offset: 0 }
+      });
 
-        if (backendMatches.length === 0) {
-          setInfoMsg("No tienes partidas registradas aún.");
-          setChampions([]);
-          return;
-        }
+      const backendMatches = res.data?.data || [];
 
-        const statsMap = {};
-        let totalGames = 0;
-        let totalWins = 0;
-        let totalKills = 0;
-        let totalDeaths = 0;
-        let totalAssists = 0;
-        let totalCS = 0;
-        let totalDuration = 0;
-
-        for (const entry of backendMatches) {
-          const p = entry.performance;
-          const m = entry.match;
-          const champId = p.champion_id;
-
-          totalGames += 1;
-          if (p.win) totalWins += 1;
-          totalKills += p.kills;
-          totalDeaths += p.deaths;
-          totalAssists += p.assists;
-          totalCS += p.cs;
-          totalDuration += m.duration_seconds;
-
-          if (!statsMap[champId]) {
-            statsMap[champId] = {
-              champion_id: champId,
-              games: 0,
-              wins: 0,
-              losses: 0,
-              kills: 0,
-              deaths: 0,
-              assists: 0,
-              cs: 0,
-              duration: 0,
-            };
-          }
-
-          const stat = statsMap[champId];
-          stat.games += 1;
-          if (p.win) stat.wins += 1;
-          else stat.losses += 1;
-
-          stat.kills += p.kills;
-          stat.deaths += p.deaths;
-          stat.assists += p.assists;
-          stat.cs += p.cs;
-          stat.duration += m.duration_seconds;
-        }
-
-        const totalKDA = totalDeaths > 0 ? ((totalKills + totalAssists) / totalDeaths) : (totalKills + totalAssists);
-        const avgCSPerMin = totalDuration > 0 ? (totalCS / (totalDuration / 60)) : 0;
-
-        const calculatedTotals = {
-          games: totalGames,
-          winrate: Math.round((totalWins / totalGames) * 100),
-          wins: totalWins,
-          losses: totalGames - totalWins,
-          kda: totalKDA.toFixed(1),
-          kills: (totalKills / totalGames).toFixed(1),
-          deaths: (totalDeaths / totalGames).toFixed(1),
-          assists: (totalAssists / totalGames).toFixed(1),
-          csPerMin: avgCSPerMin.toFixed(1),
-        };
-
-        const championArray = await Promise.all(
-          Object.values(statsMap).map(async (stat) => {
-            const iconUrl = await getChampionIcon(stat.champion_id);
-            const kda = stat.deaths > 0 ? ((stat.kills + stat.assists) / stat.deaths) : (stat.kills + stat.assists);
-            const csPerMin = stat.duration > 0 ? (stat.cs / (stat.duration / 60)) : 0;
-
-            return {
-              id: stat.champion_id,
-              name: iconUrl ? iconUrl.split('/').pop().replace('.png', '') : 'Unknown',
-              icon: iconUrl,
-              games: stat.games,
-              winrate: Math.round((stat.wins / stat.games) * 100),
-              wins: stat.wins,
-              losses: stat.losses,
-              kda: kda.toFixed(1),
-              kills: (stat.kills / stat.games).toFixed(1),
-              deaths: (stat.deaths / stat.games).toFixed(1),
-              assists: (stat.assists / stat.games).toFixed(1),
-              csPerMin: csPerMin.toFixed(1),
-            };
-          })
-        );
-
-        championArray.sort((a, b) => b.games - a.games);
-
-        setTotals(calculatedTotals);
-        setChampions(championArray);
-
-      } catch (err) {
-        setErrorMsg("Error al cargar las estadísticas.");
-      } finally {
-        setLoading(false);
+      if (backendMatches.length === 0) {
+        setInfoMsg("No tienes partidas registradas aún.");
+        setChampions([]);
+        return;
       }
-    };
 
+      const statsMap = {};
+      let totalGames = 0;
+      let totalWins = 0;
+      let totalKills = 0;
+      let totalDeaths = 0;
+      let totalAssists = 0;
+      let totalCS = 0;
+      let totalDuration = 0;
+
+      for (const entry of backendMatches) {
+        const p = entry.performance;
+        const m = entry.match;
+        const champId = p.champion_id;
+
+        totalGames += 1;
+        if (p.win) totalWins += 1;
+        totalKills += p.kills;
+        totalDeaths += p.deaths;
+        totalAssists += p.assists;
+        totalCS += p.cs;
+        totalDuration += m.duration_seconds;
+
+        if (!statsMap[champId]) {
+          statsMap[champId] = {
+            champion_id: champId,
+            games: 0,
+            wins: 0,
+            losses: 0,
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+            cs: 0,
+            duration: 0,
+          };
+        }
+
+        const stat = statsMap[champId];
+        stat.games += 1;
+        if (p.win) stat.wins += 1;
+        else stat.losses += 1;
+
+        stat.kills += p.kills;
+        stat.deaths += p.deaths;
+        stat.assists += p.assists;
+        stat.cs += p.cs;
+        stat.duration += m.duration_seconds;
+      }
+
+      const totalKDA = totalDeaths > 0 ? ((totalKills + totalAssists) / totalDeaths) : (totalKills + totalAssists);
+      const avgCSPerMin = totalDuration > 0 ? (totalCS / (totalDuration / 60)) : 0;
+
+      const calculatedTotals = {
+        games: totalGames,
+        winrate: Math.round((totalWins / totalGames) * 100),
+        wins: totalWins,
+        losses: totalGames - totalWins,
+        kda: totalKDA.toFixed(1),
+        kills: (totalKills / totalGames).toFixed(1),
+        deaths: (totalDeaths / totalGames).toFixed(1),
+        assists: (totalAssists / totalGames).toFixed(1),
+        csPerMin: avgCSPerMin.toFixed(1),
+      };
+
+      const championArray = await Promise.all(
+        Object.values(statsMap).map(async (stat) => {
+          const iconUrl = await getChampionIcon(stat.champion_id);
+          const kda = stat.deaths > 0 ? ((stat.kills + stat.assists) / stat.deaths) : (stat.kills + stat.assists);
+          const csPerMin = stat.duration > 0 ? (stat.cs / (stat.duration / 60)) : 0;
+
+          return {
+            id: stat.champion_id,
+            name: iconUrl ? iconUrl.split('/').pop().replace('.png', '') : 'Unknown',
+            icon: iconUrl,
+            games: stat.games,
+            winrate: Math.round((stat.wins / stat.games) * 100),
+            wins: stat.wins,
+            losses: stat.losses,
+            kda: kda.toFixed(1),
+            kills: (stat.kills / stat.games).toFixed(1),
+            deaths: (stat.deaths / stat.games).toFixed(1),
+            assists: (stat.assists / stat.games).toFixed(1),
+            csPerMin: csPerMin.toFixed(1),
+          };
+        })
+      );
+
+      championArray.sort((a, b) => b.games - a.games);
+
+      setTotals(calculatedTotals);
+      setChampions(championArray);
+
+    } catch (err) {
+      setErrorMsg("Error al cargar las estadísticas.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchChampionStats();
   }, []);
+
+  // 🔄 BOTÓN: Recargar stats
+  const handleSync = async () => {
+    if (isSyncDisabled) return;
+
+    setIsSyncDisabled(true);
+    setSyncLabel("Syncing…");
+    setIsUpToDate(false);
+
+    try {
+      await fetchChampionStats();
+      setSyncLabel("Up to date");
+      setIsUpToDate(true);
+    } catch {
+      setSyncLabel("Retry");
+      setIsUpToDate(false);
+    }
+
+    setIsSyncDisabled(false);
+  };
 
   if (loading) {
     return (
@@ -156,9 +181,26 @@ export default function TablaCampeones() {
       {infoMsg && <Text style={styles.infoText}>{infoMsg}</Text>}
       {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
 
-      <ScrollView style={{ flex: 1 }}>
-        <Text style={styles.header}>SEASON 15 STATS</Text>
+      {/* 🔥 FILA HEADER + BOTÓN */}
+      <View style={styles.headerRow}>
+        <Text style={styles.headerLeft}>SEASON 15 STATS</Text>
 
+        <TouchableOpacity
+          style={[styles.syncButton, isSyncDisabled && styles.syncButtonDisabled]}
+          onPress={handleSync}
+          disabled={isSyncDisabled}
+        >
+          <View
+            style={[
+              styles.syncDot,
+              isUpToDate ? styles.syncDotGreen : styles.syncDotYellow,
+            ]}
+          />
+          <Text style={styles.syncButtonText}>{syncLabel}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={{ flex: 1 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={true}>
           <View>
 
@@ -273,14 +315,51 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  header: {
+  /* 🔥 NUEVO: Header + botón */
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  headerLeft: {
     color: "#d1d1d1",
     fontSize: 16,
     fontWeight: "600",
-    textAlign: "right",
-    marginBottom: 15,
   },
 
+  /* 🔥 Estilo del botón que pediste */
+  syncButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2d2d2d",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  syncButtonDisabled: {
+    opacity: 0.5,
+  },
+  syncButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    marginLeft: 6,
+  },
+
+  syncDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 50,
+  },
+  syncDotGreen: {
+    backgroundColor: "#2ecc71",
+  },
+  syncDotYellow: {
+    backgroundColor: "#f1c40f",
+  },
+
+  /* TABLA */
   tableHeader: {
     borderBottomWidth: 2,
     borderBottomColor: "#1a1f3a",
