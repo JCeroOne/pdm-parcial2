@@ -211,6 +211,10 @@ export default function PartidasScreen() {
   }
 
   useEffect(() => {
+    if (!api.defaults.headers.common["Authorization"]){
+      router.navigate("/");
+      return;
+    }
     fetchPlayer()
     fetchMatches(0, false)
   }, [])
